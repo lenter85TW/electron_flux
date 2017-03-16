@@ -9,7 +9,6 @@ var ipcRenderer = null;
 var remote = null;
 var windowList = [];
 var main = null;
-var rendererStoreObj = null;
 var mainStoreObj = null;
 var emitter = new EventEmitter();
 
@@ -35,7 +34,7 @@ var rendererAction = {
     }
 };
 
-var mainStore = {
+var mainProcess = {
 
     init: function init(store) {
         mainStoreObj = store;
@@ -57,13 +56,13 @@ var mainStore = {
     }
 };
 
-var rendererStore = {
+var rendererProcess = {
 
 
     init: function init(rendererRemoteMain, rendererIpc) {
         main = rendererRemoteMain;
         ipcRenderer = rendererIpc;
-        rendererStoreObj = main.getStore();
+        mainStoreObj = main.getStore();
         ipcRenderer.on('dataChanged', this.DataChanged);
     },
     DataChanged: function DataChanged(event, dataName) {
@@ -76,12 +75,12 @@ var rendererStore = {
     removeListener: function removeListener() {}
 };
 
-function getRenderStoreObj() {
-    return rendererStoreObj;
+function getMainStoreObj() {
+    return mainStoreObj;
 }
 
 exports.mainDispatcher = mainDispatcher;
 exports.rendererAction = rendererAction;
-exports.mainStore = mainStore;
-exports.rendererStore = rendererStore;
-exports.getRenderStoreObj = getRenderStoreObj;
+exports.mainProcess = mainProcess;
+exports.rendererProcess = rendererProcess;
+exports.getMainStoreObj = getMainStoreObj;
