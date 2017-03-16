@@ -18,7 +18,7 @@ var mainDispatcher = {
         ipcMain.on('updateStore', function (event, dataName, data) {
             console.log("mainDispatcher 실행", dataName, data);
             if (mainStoreObj[dataName] !== data) {
-                mainStore.changeData(dataName, data);
+                mainProcess.changeData(dataName, data);
             }
         });
     }
