@@ -47,10 +47,9 @@ var mainProcess = {
         windowList.splice(index, 1);
     },
     changeData: function changeData(dataName, newData) {
-        console.log("mainStore - changeData 실행");
+        console.log("mainStore - changeData 실행", dataName, newData);
         mainStoreObj[dataName] = newData;
         windowList.forEach(function (currentValue) {
-            console.log("forEach 실행");
             currentValue.webContents.send('dataChanged', dataName);
         });
     }
@@ -72,7 +71,9 @@ var rendererProcess = {
     addListener: function addListener(eventType, func) {
         emitter.on(eventType, func);
     },
-    removeListener: function removeListener() {}
+    removeListener: function removeListener(eventType, func) {
+        emitter.removeListener(eventType, func);
+    }
 };
 
 function getMainStoreObj() {
