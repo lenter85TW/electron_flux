@@ -1,11 +1,11 @@
 {
   "name": "electron_flux",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "DOEUN KIM (Lenter)",
+  "author": "DOEUN KIM(lenter85@naver.com or lenter85@twinny.co.kr)",
   "license": "ISC"
 }
