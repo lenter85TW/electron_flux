@@ -34,7 +34,7 @@ var mainWindowCRUD = {
     init: function init(mainIpc, BrowserWindow) {
         ipcMain = mainIpc;
 
-        ipcMain.on('createNewWindow', function (event, newWindowName, informationDataObj, htmlFileUrl, frameBoolean, forceOpenWindowAndReplaceItBoolean=false) {
+        ipcMain.on('createNewWindow', function (event, newWindowName, informationDataObj, htmlFileUrl, frameBoolean=true, forceOpenWindowAndReplaceItBoolean=false) {
             console.log("createNewWindow 실행", newWindowName, informationDataObj, htmlFileUrl, forceOpenWindowAndReplaceItBoolean);
 
             //이미 해당 이름으로 윈도우가 열려있지 않다면
@@ -67,7 +67,7 @@ var mainWindowCRUD = {
 
                     console.log('new window replace old window');
                     //새로 다시 윈도우 만들고 windowListMap에 추가해주고 윈도우도 열자.
-                    var newBrowser = new BrowserWindow({width: informationDataObj.width, height: informationDataObj.height, frame:false});
+                    var newBrowser = new BrowserWindow({width: informationDataObj.width, height: informationDataObj.height, frame:frameBoolean});
 
                     newBrowser.on('closed', () => {
                         console.log('replaced window closed event receive');
@@ -87,17 +87,27 @@ var mainWindowCRUD = {
 
         });
 
-        ipcMain.on('closeWindow', function (event, windowNameToClose) {
+        ipcMain.on('closeWindow', function (event, windowNameToClose, callBackFunctionBeforeWindowClosed, callBackFunctionAfterWindowClosed) {
             console.log("windowNameToClose 실행", windowNameToClose);
 
             //일단 종료시킬 윈도우를 맵에서 가져오고
             var browser = mainWindowListMap.get(windowNameToClose);
             if(browser != null){
+                if(callBackFunctionBeforeWindowClosed !== null){
+                    callBackFunctionBeforeWindowClosed();
+                }
+
+
                 //윈도우 리스트 저장맵에서 삭제시켜준후
                 mainProcess.removeWindow(windowNameToClose);
 
                 //윈도우 종료.
                 browser.close();
+
+                if(callBackFunctionAfterWindowClosed !== null){
+                    callBackFunctionAfterWindowClosed();
+                }
+
             }
 
 
@@ -121,7 +131,7 @@ var rendererAction = {
         ipcRenderer.send('createNewWindow', newWindowName, informationDataObj, htmlFileUrl, frameBoolean, forceOpenWindowAndReplaceItBoolean);
     },
 
-    closeWindow: function closeWindow(windowNameToClose) {
+    closeWindow: function closeWindow(windowNameToClose, callBackFunctionBeforeWindowClosed, callBackFunctionAfterWindowClosed) {
         console.log('closeWindow 실행');
         ipcRenderer.send('closeWindow', windowNameToClose);
     }
