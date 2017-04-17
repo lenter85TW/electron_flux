@@ -34,18 +34,56 @@ var mainWindowCRUD = {
     init: function init(mainIpc, BrowserWindow) {
         ipcMain = mainIpc;
 
-        ipcMain.on('createNewWindow', function (event, newWindowName, informationDataObj, htmlFileUrl) {
-            console.log("createNewWindow 실행", newWindowName, informationDataObj, htmlFileUrl);
-            var newBrowser = new BrowserWindow({width: informationDataObj.width, height: informationDataObj.height, frameless:true});
+        ipcMain.on('createNewWindow', function (event, newWindowName, informationDataObj, htmlFileUrl, forceOpenWindowAndReplaceItBoolean=false) {
+            console.log("createNewWindow 실행", newWindowName, informationDataObj, htmlFileUrl, forceOpenWindowAndReplaceItBoolean);
 
-            newBrowser.on('closed', () => {
-                console.log('window closed event receive');
-            mainProcess.removeWindow(newWindowName);
-            newBrowser = null;
-        })
+            //이미 해당 이름으로 윈도우가 열려있지 않다면
+            if(mainWindowListMap.get(newWindowName) == null) {
+                console.log('new window create');
+                //새로운 윈도우 생성하고 열자
+                var newBrowser = new BrowserWindow({width: informationDataObj.width, height: informationDataObj.height, frame:false});
 
-            newBrowser.loadURL(htmlFileUrl);
-            mainProcess.addWindow(newWindowName, newBrowser);
+                newBrowser.on('closed', () => {
+                    console.log('window closed event receive');
+                    mainProcess.removeWindow(newWindowName);
+                    newBrowser = null;
+                })
+
+                newBrowser.loadURL(htmlFileUrl);
+                mainProcess.addWindow(newWindowName, newBrowser);
+
+                //이미 해당 이름으로 윈도우가 열려 있는 상태라면
+            } else {
+                //똑같은 이름으로 새로운 윈도우 브라우저로 대체하고 싶다면
+                if(forceOpenWindowAndReplaceItBoolean === true){
+                    //일단 종료시킬 윈도우를 맵에서 가져오고
+                    var browser = mainWindowListMap.get(newWindowName);
+                    if(browser != null){
+                        //윈도우 리스트 저장맵에서 삭제시켜준후
+                        mainProcess.removeWindow(newWindowName);
+                        //윈도우 종료.
+                        browser.close();
+                    }
+
+                    console.log('new window replace old window');
+                    //새로 다시 윈도우 만들고 windowListMap에 추가해주고 윈도우도 열자.
+                    var newBrowser = new BrowserWindow({width: informationDataObj.width, height: informationDataObj.height, frame:false});
+
+                    newBrowser.on('closed', () => {
+                        console.log('replaced window closed event receive');
+                        mainProcess.removeWindow(newWindowName);
+                        newBrowser = null;
+                    })
+
+                    newBrowser.loadURL(htmlFileUrl);
+                    mainProcess.addWindow(newWindowName, newBrowser);
+
+
+                } else {
+                    console.log('nothing happened')
+                    // 아무 일도 안한다.
+                }
+            }
 
         });
 
@@ -54,12 +92,15 @@ var mainWindowCRUD = {
 
             //일단 종료시킬 윈도우를 맵에서 가져오고
             var browser = mainWindowListMap.get(windowNameToClose);
+            if(browser != null){
+                //윈도우 리스트 저장맵에서 삭제시켜준후
+                mainProcess.removeWindow(windowNameToClose);
 
-            //윈도우 리스트 저장맵에서 삭제시켜준후
-            mainProcess.removeWindow(windowNameToClose);
+                //윈도우 종료.
+                browser.close();
+            }
 
-            //윈도우 종료.
-            browser.close();
+
         });
 
     }
@@ -75,9 +116,9 @@ var rendererAction = {
         ipcRenderer.send('updateStore', dataName, data);
     },
 
-    createNewWindow: function createNewWindow(newWindowName, informationDataObj, htmlFileUrl) {
+    createNewWindow: function createNewWindow(newWindowName, informationDataObj, htmlFileUrl, forceOpenWindowAndReplaceItBoolean) {
         console.log('createNewWindow 실행');
-        ipcRenderer.send('createNewWindow', newWindowName, informationDataObj, htmlFileUrl);
+        ipcRenderer.send('createNewWindow', newWindowName, informationDataObj, htmlFileUrl, forceOpenWindowAndReplaceItBoolean);
     },
 
     closeWindow: function closeWindow(windowNameToClose) {
