@@ -8,7 +8,7 @@ var ipcMain = null;
 var ipcRenderer = null;
 var remote = null;
 var windowList = [];
-var main = null;
+var main222 = null;
 var mainStoreObj = null;
 var emitter = new EventEmitter();
 
@@ -34,14 +34,14 @@ var mainWindowCRUD = {
     init: function init(mainIpc, BrowserWindow) {
         ipcMain = mainIpc;
 
-        ipcMain.on('createNewWindow', function (event, newWindowName, optionsObj, htmlFileUrl, forceOpenWindowAndReplaceItBoolean=false) {
-            console.log("createNewWindow 실행", newWindowName, optionsObj, htmlFileUrl, forceOpenWindowAndReplaceItBoolean);
+        ipcMain.on('createNewWindow', function (event, newWindowName, informationDataObj, htmlFileUrl, frameBoolean=true, forceOpenWindowAndReplaceItBoolean=false) {
+            console.log("createNewWindow 실행", newWindowName, informationDataObj, htmlFileUrl, forceOpenWindowAndReplaceItBoolean);
 
             //이미 해당 이름으로 윈도우가 열려있지 않다면
             if(mainWindowListMap.get(newWindowName) == null) {
                 console.log('new window create');
                 //새로운 윈도우 생성하고 열자
-                var newBrowser = new BrowserWindow(optionsObj);
+                var newBrowser = new BrowserWindow({width: informationDataObj.width, height: informationDataObj.height, frame:frameBoolean});
 
                 newBrowser.on('closed', () => {
                     console.log('window closed event receive');
@@ -67,7 +67,7 @@ var mainWindowCRUD = {
 
                     console.log('new window replace old window');
                     //새로 다시 윈도우 만들고 windowListMap에 추가해주고 윈도우도 열자.
-                    var newBrowser = new BrowserWindow(optionsObj);
+                    var newBrowser = new BrowserWindow({width: informationDataObj.width, height: informationDataObj.height, frame:frameBoolean});
 
                     newBrowser.on('closed', () => {
                         console.log('replaced window closed event receive');
@@ -126,9 +126,9 @@ var rendererAction = {
         ipcRenderer.send('updateStore', dataName, data);
     },
 
-    createNewWindow: function createNewWindow(newWindowName, optionsObj, htmlFileUrl, forceOpenWindowAndReplaceItBoolean) {
+    createNewWindow: function createNewWindow(newWindowName, informationDataObj, htmlFileUrl, frameBoolean, forceOpenWindowAndReplaceItBoolean) {
         console.log('createNewWindow 실행');
-        ipcRenderer.send('createNewWindow', newWindowName, optionsObj, htmlFileUrl, forceOpenWindowAndReplaceItBoolean);
+        ipcRenderer.send('createNewWindow', newWindowName, informationDataObj, htmlFileUrl, frameBoolean, forceOpenWindowAndReplaceItBoolean);
     },
 
     closeWindow: function closeWindow(windowNameToClose, callBackFunctionBeforeWindowClosed, callBackFunctionAfterWindowClosed) {
@@ -176,11 +176,10 @@ var mainProcess = {
 var rendererProcess = {
 
 
-    init: function init(rendererRemoteMain, rendererIpc) {
-        main = rendererRemoteMain;
+    init: function init(rendererIpc, remote) {
         ipcRenderer = rendererIpc;
-        mainStoreObj = main.getStore();
-        mainWindowListMap = main.getWindowListMap();
+        mainStoreObj = remote.getGlobal('storeObj');
+        mainWindowListMap = remote.getGlobal('mainWindowListMap');
         ipcRenderer.on('dataChanged', this.DataChanged);
     },
     DataChanged: function DataChanged(event, dataName) {
@@ -196,11 +195,15 @@ var rendererProcess = {
 };
 
 function getMainStoreObj() {
+    //var mainStoreObj = ipcRenderer.sendSync('getStore')
+
     return mainStoreObj;
 }
 
 
 function getMainWindowListMap() {
+    //var mainWindowListMap = ipcRenderer.sendSync('getWindowListMap')
+
     return mainWindowListMap;
 }
 
