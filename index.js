@@ -34,14 +34,14 @@ var mainWindowCRUD = {
     init: function init(mainIpc, BrowserWindow) {
         ipcMain = mainIpc;
 
-        ipcMain.on('createNewWindow', function (event, newWindowName, informationDataObj, htmlFileUrl, frameBoolean=true, forceOpenWindowAndReplaceItBoolean=false) {
-            console.log("createNewWindow 실행", newWindowName, informationDataObj, htmlFileUrl, forceOpenWindowAndReplaceItBoolean);
+        ipcMain.on('createNewWindow', function (event, newWindowName, browserOptionsObj, htmlFileUrl, forceOpenWindowAndReplaceItBoolean=false) {
+            console.log("createNewWindow 실행", newWindowName, browserOptionsObj, htmlFileUrl, forceOpenWindowAndReplaceItBoolean);
 
             //이미 해당 이름으로 윈도우가 열려있지 않다면
             if(mainWindowListMap.get(newWindowName) == null) {
                 console.log('new window create');
                 //새로운 윈도우 생성하고 열자
-                var newBrowser = new BrowserWindow({width: informationDataObj.width, height: informationDataObj.height, frame:frameBoolean});
+                var newBrowser = new BrowserWindow(browserOptionsObj);
 
                 newBrowser.on('closed', () => {
                     console.log('window closed event receive');
@@ -67,7 +67,7 @@ var mainWindowCRUD = {
 
                     console.log('new window replace old window');
                     //새로 다시 윈도우 만들고 windowListMap에 추가해주고 윈도우도 열자.
-                    var newBrowser = new BrowserWindow({width: informationDataObj.width, height: informationDataObj.height, frame:frameBoolean});
+                    var newBrowser = new BrowserWindow(browserOptionsObj);
 
                     newBrowser.on('closed', () => {
                         console.log('replaced window closed event receive');
@@ -126,9 +126,9 @@ var rendererAction = {
         ipcRenderer.send('updateStore', dataName, data);
     },
 
-    createNewWindow: function createNewWindow(newWindowName, informationDataObj, htmlFileUrl, frameBoolean, forceOpenWindowAndReplaceItBoolean) {
+    createNewWindow: function createNewWindow(newWindowName, browserOptionsObj, htmlFileUrl, forceOpenWindowAndReplaceItBoolean) {
         console.log('createNewWindow 실행');
-        ipcRenderer.send('createNewWindow', newWindowName, informationDataObj, htmlFileUrl, frameBoolean, forceOpenWindowAndReplaceItBoolean);
+        ipcRenderer.send('createNewWindow', newWindowName, browserOptionsObj, htmlFileUrl, forceOpenWindowAndReplaceItBoolean);
     },
 
     closeWindow: function closeWindow(windowNameToClose, callBackFunctionBeforeWindowClosed, callBackFunctionAfterWindowClosed) {
