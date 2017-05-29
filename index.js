@@ -133,7 +133,7 @@ var rendererAction = {
 
     closeWindow: function closeWindow(windowNameToClose, callBackFunctionBeforeWindowClosed, callBackFunctionAfterWindowClosed) {
         console.log('closeWindow 실행');
-        ipcRenderer.send('closeWindow', windowNameToClose);
+        ipcRenderer.send('closeWindow', windowNameToClose, callBackFunctionBeforeWindowClosed, callBackFunctionAfterWindowClosed);
     }
 
 
