@@ -166,7 +166,9 @@ var mainProcess = {
         mainStoreObj[dataName] = newData;
         mainWindowListMap.forEach(function (currentValue, key) {
             //console.log('electron_flux - changeData ForEach execute',  key, currentValue);
-            currentValue.webContents.send('dataChanged', dataName);
+            if(currentValue !== undefined && currentValue !== null){
+                currentValue.webContents.send('dataChanged', dataName);
+            }
         });
     }
 
