@@ -10,6 +10,7 @@ var remote = null;
 var windowList = [];
 var main222 = null;
 var mainStoreObj = null;
+var copiedDefaultMainStoreObj = null;
 var emitter = new EventEmitter();
 
 ////
@@ -141,8 +142,9 @@ var rendererAction = {
 
 var mainProcess = {
     /////
-    init: function init(store, windowListMap) {
+    init: function init(store, windowListMap, copiedDefaultMainStoreObj) {
         mainStoreObj = store;
+        copiedDefaultMainStoreObj = Object.assign(copiedDefaultMainStoreObj, JSON.parse(JSON.stringify(store)));
         mainWindowListMap = windowListMap;
     },
 
@@ -170,6 +172,12 @@ var mainProcess = {
                 currentValue.webContents.send('dataChanged', dataName);
             }
         });
+    },
+
+    resetStore : function resetStore() {
+        for(var property in copiedDefaultMainStoreObj){
+            this.changeData(property, copiedDefaultMainStoreObj[property])
+        }
     }
 
 
@@ -182,6 +190,7 @@ var rendererProcess = {
         ipcRenderer = rendererIpc;
         mainStoreObj = remote.getGlobal('storeObj');
         mainWindowListMap = remote.getGlobal('mainWindowListMap');
+        copiedDefaultMainStoreObj = remote.getGlobal('copiedDefaultMainStoreObj');
         ipcRenderer.on('dataChanged', this.DataChanged);
     },
     DataChanged: function DataChanged(event, dataName) {
@@ -202,6 +211,12 @@ function getMainStoreObj() {
     return mainStoreObj;
 }
 
+function getCopiedDefaultMainStoreObj() {
+    //var mainStoreObj = ipcRenderer.sendSync('getStore')
+
+    return copiedDefaultMainStoreObj;
+}
+
 
 function getMainWindowListMap() {
     //var mainWindowListMap = ipcRenderer.sendSync('getWindowListMap')
@@ -215,4 +230,5 @@ exports.mainProcess = mainProcess;
 exports.rendererProcess = rendererProcess;
 exports.mainWindowCRUD = mainWindowCRUD;
 exports.getMainStoreObj = getMainStoreObj;
+exports.getCopiedDefaultMainStoreObj = getCopiedDefaultMainStoreObj;
 exports.getMainWindowListMap = getMainWindowListMap;
