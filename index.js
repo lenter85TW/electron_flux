@@ -3,6 +3,7 @@
  */
 
 var EventEmitter = require('events').EventEmitter;
+var _ = require('lodash');
 
 var ipcMain = null;
 var ipcRenderer = null;
@@ -10,7 +11,7 @@ var remote = null;
 var windowList = [];
 var main222 = null;
 var mainStoreObj = null;
-var copiedDefaultMainStoreObj = null;
+var copiedDefaultMainStoreObj = undefined;
 var emitter = new EventEmitter();
 
 ////
@@ -142,9 +143,13 @@ var rendererAction = {
 
 var mainProcess = {
     /////
-    init: function init(store, windowListMap, copiedDefaultMainStoreObj) {
+    init: function init(store, windowListMap) {
+        console.log('mainProcess init 기존것과 같은가 ? ', mainStoreObj === store);
         mainStoreObj = store;
-        copiedDefaultMainStoreObj = Object.assign(copiedDefaultMainStoreObj, JSON.parse(JSON.stringify(store)));
+        // copiedDefaultMainStoreStr = Object.assign({}, JSON.parse(JSON.stringify(store)));
+        copiedDefaultMainStoreObj = _.cloneDeep(store);
+        // console.log('initial Obj', store);
+        console.log('initial copied Obj', copiedDefaultMainStoreObj.session.login);
         mainWindowListMap = windowListMap;
     },
 
@@ -175,8 +180,22 @@ var mainProcess = {
     },
 
     resetStore : function resetStore() {
-        for(var property in copiedDefaultMainStoreObj){
-            this.changeData(property, copiedDefaultMainStoreObj[property])
+        // console.log('copiedDefaultMainStoreStr', copiedDefaultMainStoreObj)
+        let copiedObj = _.cloneDeep(copiedDefaultMainStoreObj);
+        // console.log('copiedDefaultMainStoreObj', copiedObj)
+        for(var property in copiedObj){
+            if(property === 'session'){
+                console.log('세션 차례다 기존것과 같은가?', mainStoreObj.session === copiedObj.session)
+
+
+            }
+            // console.log('electronFlux resetStore property : ', property)
+
+            this.changeData(property, copiedObj[property])
+
+            if(property === 'session'){
+                console.log('세션 차례다 기존것과 같은가?2', mainStoreObj.session === copiedObj.session)
+            }
         }
     }
 
@@ -190,7 +209,6 @@ var rendererProcess = {
         ipcRenderer = rendererIpc;
         mainStoreObj = remote.getGlobal('storeObj');
         mainWindowListMap = remote.getGlobal('mainWindowListMap');
-        copiedDefaultMainStoreObj = remote.getGlobal('copiedDefaultMainStoreObj');
         ipcRenderer.on('dataChanged', this.DataChanged);
     },
     DataChanged: function DataChanged(event, dataName) {
@@ -211,12 +229,6 @@ function getMainStoreObj() {
     return mainStoreObj;
 }
 
-function getCopiedDefaultMainStoreObj() {
-    //var mainStoreObj = ipcRenderer.sendSync('getStore')
-
-    return copiedDefaultMainStoreObj;
-}
-
 
 function getMainWindowListMap() {
     //var mainWindowListMap = ipcRenderer.sendSync('getWindowListMap')
@@ -230,5 +242,4 @@ exports.mainProcess = mainProcess;
 exports.rendererProcess = rendererProcess;
 exports.mainWindowCRUD = mainWindowCRUD;
 exports.getMainStoreObj = getMainStoreObj;
-exports.getCopiedDefaultMainStoreObj = getCopiedDefaultMainStoreObj;
 exports.getMainWindowListMap = getMainWindowListMap;
